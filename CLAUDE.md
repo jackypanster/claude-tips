@@ -1,237 +1,236 @@
-# Development Guidelines
+# 编码原则（极简版）
 
-## Philosophy
+## 核心理念
 
-### Core Beliefs
+**快速失败 > 完美代码**
+**函数式 > 面向对象**
+**直接明了 > 优雅抽象**
+**少写代码 > 多写代码**
 
-- **Incremental progress over big bangs** - Small changes that compile and pass tests
-- **Learning from existing code** - Study and plan before implementing
-- **Pragmatic over dogmatic** - Adapt to project reality
-- **Clear intent over clever code** - Be boring and obvious
+---
 
-### Simplicity Means
+## 1. Fast-Fail 原则
 
-- Single responsibility per function/class
-- Avoid premature abstractions
-- No clever tricks - choose the boring solution
-- If you need to explain it, it's too complex
+### 错误处理：默认不处理
 
-## Process
+```python
+✅ 好：让错误直接抛出
+def get_user(user_id):
+    return db.query('SELECT * FROM users WHERE id = ?', [user_id])
 
-### 1. Planning & Staging
-
-Break complex work into 3-5 stages. Document in `IMPLEMENTATION_PLAN.md`:
-
-```markdown
-## Stage N: [Name]
-
-**Goal**: [Specific deliverable]
-**Success Criteria**: [Testable outcomes]
-**Tests**: [Specific test cases]
-**Status**: [Not Started|In Progress|Complete]
-**Time Estimate**: [Rough estimate]
-**Dependencies**: [What this stage depends on]
+❌ 坏：捕获后不知道怎么办
+def get_user(user_id):
+    try:
+        return db.query(...)
+    except Exception as e:
+        print(f'Error: {e}')  # 然后呢？
+        return None  # 隐藏了问题
 ```
 
-- Update status as you progress
-- Remove file when all stages are done
-- **Review plan with team** if it affects shared components
+### 必须包含的错误信息
 
-### 2. Implementation Flow
+- 文件名、函数名
+- 输入参数（完整的，不要省略）
+- 失败原因（具体的，不要模糊）
+- 上下文数据
 
-1. **Understand** - Study existing patterns in codebase
-2. **Plan** - Sketch the approach, identify edge cases
-3. **Test** - Write test first (red)
-4. **Implement** - Minimal code to pass (green)
-5. **Refactor** - Clean up with tests passing
-6. **Review** - Self-review before commit
-7. **Commit** - With clear message linking to plan
+```python
+# 好的错误
+raise Exception(f"Failed to process user {user_id} in process_payment(): {reason}")
 
-### 3. When Stuck (After 3 Attempts)
+# 差的错误
+raise Exception("Processing failed")
+```
 
-**CRITICAL**: Maximum 3 attempts per issue, then STOP.
+---
 
-1. **Document what failed**:
-   - What you tried
-   - Specific error messages
-   - Why you think it failed
-   - **Time spent on each attempt**
+## 2. 代码风格：越简单越好
 
-2. **Research alternatives**:
-   - Find 2-3 similar implementations
-   - Note different approaches used
-   - **Check project documentation/wiki**
+### 默认用函数，不用类
 
-3. **Question fundamentals**:
-   - Is this the right abstraction level?
-   - Can this be split into smaller problems?
-   - Is there a simpler approach entirely?
-   - **Is this even necessary?**
+```python
+✅ 好：直接函数
+def calculate_total(items):
+    return sum(item.price for item in items)
 
-4. **Seek help**:
-   - Ask team member familiar with the area
-   - Create detailed issue with research
-   - **Don't struggle alone beyond 3 attempts**
+❌ 坏：无谓的封装
+class Calculator:
+    def __init__(self):
+        pass
 
-## Technical Standards
+    def calculate_total(self, items):
+        return sum(item.price for item in items)
+```
 
-### Architecture Principles
+### 函数保持简短（< 20 行）
 
-- **Composition over inheritance** - Use dependency injection
-- **Interfaces over singletons** - Enable testing and flexibility
-- **Explicit over implicit** - Clear data flow and dependencies
-- **Test-driven when possible** - Never disable tests, fix them
-- **Configuration over hardcoding** - Use environment variables/config files
+- 超过 20 行 = 拆分信号
+- 一个函数只做一件事
+- 能看到底层实现，不要超过 3 层调用
 
-### Code Quality
+### 重复好过错误的抽象
 
-- **Every commit must**:
-  - Compile successfully
-  - Pass all existing tests
-  - Include tests for new functionality
-  - Follow project formatting/linting
-  - **Not break existing functionality**
+```python
+✅ 好：重复但清晰
+def create_user(data):
+    return db.query('INSERT INTO users ...', [data['name'], data['email']])
 
-- **Before committing**:
-  - Run formatters/linters
-  - Self-review changes
-  - Ensure commit message explains "why"
-  - **Check git diff for unintended changes**
+def create_post(data):
+    return db.query('INSERT INTO posts ...', [data['title'], data['content']])
 
-### Error Handling
+❌ 坏：过早抽象
+def create(table, data):  # 看起来灵活，实际脆弱
+    keys = ','.join(data.keys())
+    values = list(data.values())
+    return db.query(f'INSERT INTO {table} ({keys}) VALUES (?)', values)
+```
 
-- Fail fast with descriptive messages
-- Include context for debugging
-- Handle errors at appropriate level
-- Never silently swallow exceptions
-- **Log errors with sufficient detail for debugging**
+### 变量命名要完整
 
-### Security Considerations
+```python
+✅ user_email, post_title, total_price
+❌ e, t, p
+```
 
-- **Never commit**:
-  - API keys, passwords, tokens
-  - Personal information
-  - Development secrets to production config
-- **Always**:
-  - Validate user inputs
-  - Use parameterized queries
-  - Follow least privilege principle
+### Python 惯用法（Pythonic）
 
-## Decision Framework
+```python
+# 用列表推导式/生成器，不用循环
+✅ result = [x * 2 for x in items if x > 0]
+✅ total = sum(item.price for item in items)
 
-When multiple valid approaches exist, choose based on:
+❌ result = []
+   for x in items:
+       if x > 0:
+           result.append(x * 2)
 
-1. **Testability** - Can I easily test this?
-2. **Readability** - Will someone understand this in 6 months?
-3. **Consistency** - Does this match project patterns?
-4. **Simplicity** - Is this the simplest solution that works?
-5. **Reversibility** - How hard to change later?
-6. **Performance** - Does this meet performance requirements?
-7. **Security** - Are there any security implications?
+# 用 f-string，不用旧式格式化
+✅ f"User {user_id} failed: {reason}"
+❌ "User %s failed: %s" % (user_id, reason)
+❌ "User {} failed: {}".format(user_id, reason)
 
-## Project Integration
+# 直接返回布尔值
+✅ return age >= 18
+✅ return name in valid_names
 
-### Learning the Codebase
+❌ if age >= 18:
+       return True
+   else:
+       return False
 
-- Find 3 similar features/components
-- Identify common patterns and conventions
-- Use same libraries/utilities when possible
-- Follow existing test patterns
-- **Read project README and contributing guidelines**
-- **Understand the deployment process**
+# 用 with 管理资源，不要手动 close
+✅ with open('file.txt') as f:
+       data = f.read()
 
-### Tooling
+❌ f = open('file.txt')
+   data = f.read()
+   f.close()
 
-- Use project's existing build system
-- Use project's test framework
-- Use project's formatter/linter settings
-- Don't introduce new tools without strong justification
-- **Keep dependencies up to date (security)**
+# 用字典的 get()，不要 try-except KeyError
+✅ value = data.get('key', default_value)
+✅ value = data.get('key')  # 返回 None 如果不存在
 
-### Communication
+❌ try:
+       value = data['key']
+   except KeyError:
+       value = default_value
+```
 
-- **Update team on significant changes**
-- **Document breaking changes clearly**
-- **Use clear, descriptive commit messages**
-- **Link commits to issues/tickets when applicable**
+---
 
-## Quality Gates
+## 3. 测试原则
 
-### Definition of Done
+### 真实测试，禁止 mock
 
-- [ ] Tests written and passing
-- [ ] Code follows project conventions
-- [ ] No linter/formatter warnings
-- [ ] Commit messages are clear
-- [ ] Implementation matches plan
-- [ ] No TODOs without issue numbers
-- [ ] **Performance benchmarks met (if applicable)**
-- [ ] **Documentation updated (if public API changed)**
-- [ ] **Security review completed (if handling sensitive data)**
+```python
+✅ 好：调用真实 API
+def test_create_user():
+    user = api.create_user({'name': 'test', 'email': 'test@example.com'})
+    assert user['id'] is not None
 
-### Test Guidelines
+❌ 坏：mock 一切
+def test_create_user():
+    mock_db.query.return_value = {'id': 1}
+    user = create_user(...)
+    assert mock_db.query.called  # 测了个寂寞
+```
 
-- Test behavior, not implementation
-- One assertion per test when possible
-- Clear test names describing scenario
-- Use existing test utilities/helpers
-- Tests should be deterministic
-- **Test edge cases and error conditions**
-- **Maintain reasonable test coverage**
+### 测试要简单直接
 
-### Performance Guidelines
+- 一个测试一个断言
+- 测试名称要描述场景
+- 遇错即停，不要 try-catch
 
-- **Profile before optimizing**
-- **Set performance budgets for critical paths**
-- **Monitor memory usage in long-running processes**
-- **Use appropriate data structures for the use case**
+---
 
-## Emergency Procedures
+## 4. 工作流程
 
-### Production Issues
+### 简化版（3 步）
 
-1. **Immediate response**:
-   - Assess impact and severity
-   - Implement quick fix or rollback
-   - Communicate status to stakeholders
+1. **写测试** - 用真实依赖
+2. **写实现** - 最简单能跑的版本
+3. **检查错误信息** - 确保出错时能快速定位
 
-2. **Follow-up**:
-   - Root cause analysis
-   - Implement proper fix
-   - Update monitoring/alerting
-   - Document lessons learned
+### 遇到问题：3 次规则
 
-### Recovery from Mistakes
+- 尝试 3 次还不行 → 停下来
+- 记录尝试过的方案和错误
+- 换一个完全不同的思路
+- 或者直接问人
 
-- **Git mistakes**: Use `git reflog` to recover
-- **Database mistakes**: Use backups, never run destructive queries in production
-- **Deployment mistakes**: Have rollback plan ready
+---
 
-## Important Reminders
+## 5. 禁止清单
 
-**NEVER**:
-- Use `--no-verify` to bypass commit hooks
-- Disable tests instead of fixing them
-- Commit code that doesn't compile
-- Make assumptions - verify with existing code
-- **Push directly to main/master without review**
-- **Commit sensitive information**
+### 永远不要
 
-**ALWAYS**:
-- Commit working code incrementally
-- Update plan documentation as you go
-- Learn from existing implementations
-- Stop after 3 failed attempts and reassess
-- **Run tests locally before pushing**
-- **Review your own code before requesting review**
-- **Keep commits atomic and focused**
+- ❌ **创建 utils/helpers 文件夹** - 会变成垃圾场
+- ❌ **写 wrapper 函数** - 直接调用底层库
+- ❌ **提前抽象** - 至少重复 3 次再考虑
+- ❌ **捕获异常后不处理** - 要么处理，要么别捕获
+- ❌ **封装 logger** - print() 就够了
+- ❌ **超过 3 层的抽象** - 你在炫技
 
-## Context-Specific Notes
+### 提交前检查（3 项）
 
-*This section should be customized per project:*
+- [ ] 能编译/运行
+- [ ] 有测试且通过
+- [ ] 错误信息清晰（手动触发一个错误看看）
 
-- **Tech stack**: [Framework, language, database]
-- **Key patterns**: [Specific patterns used in this project]
-- **Common gotchas**: [Project-specific issues to watch for]
-- **Deployment process**: [How to deploy safely]
-- **Team contacts**: [Who to ask for different areas]
+---
+
+## 6. 决策原则（遇到多个方案时）
+
+问自己 3 个问题：
+
+1. **哪个最简单？** - 选最简单的
+2. **哪个代码最少？** - 选代码最少的
+3. **出错时哪个更容易调试？** - 选容易调试的
+
+如果还是不确定 → 选第一个想到的方案，不要过度思考
+
+---
+
+## 7. 配置说明
+
+### 语言和输出
+
+- **思考过程**：用英文
+- **回复内容**：用中文
+
+### 项目相关（根据实际项目填写）
+
+- **技术栈**：[在这里填写]
+- **关键联系人**：[在这里填写]
+- **常见问题**：[在这里填写]
+
+---
+
+## 记住
+
+**写代码不是为了炫技，是为了解决问题**
+
+- 代码越少，bug 越少
+- 抽象越少，调试越快
+- 功能能用就行，不要追求完美
+- 3 个月后的你会感谢现在写简单代码的你
