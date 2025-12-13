@@ -1,235 +1,42 @@
-# 编码原则
-
-## 核心理念
-
-**快速失败 > 完美代码**
-**函数式 > 面向对象**
-**直接明了 > 优雅抽象**
-**少写代码 > 多写代码**
-
----
-
-## 1. Fast-Fail 原则
-
-### 错误处理：默认不处理
-
-```python
-✅ 好：让错误直接抛出
-def get_user(user_id):
-    return db.query('SELECT * FROM users WHERE id = ?', [user_id])
-
-❌ 坏：捕获后不知道怎么办
-def get_user(user_id):
-    try:
-        return db.query(...)
-    except Exception as e:
-        print(f'Error: {e}')  # 然后呢？
-        return None  # 隐藏了问题
-```
-
-### 必须包含的错误信息
-
-- 文件名、函数名
-- 输入参数（完整的，不要省略）
-- 失败原因（具体的，不要模糊）
-- 上下文数据
-
-```python
-# 好的错误
-raise Exception(f"Failed to process user {user_id} in process_payment(): {reason}")
-
-# 差的错误
-raise Exception("Processing failed")
-```
-
----
-
-## 2. 代码风格：越简单越好
-
-### 默认用函数，不用类
-
-```python
-✅ 好：直接函数
-def calculate_total(items):
-    return sum(item.price for item in items)
-
-❌ 坏：无谓的封装
-class Calculator:
-    def __init__(self):
-        pass
-
-    def calculate_total(self, items):
-        return sum(item.price for item in items)
-```
-
-### 函数保持简短（< 20 行）
-
-- 超过 20 行 = 拆分信号
-- 一个函数只做一件事
-- 能看到底层实现，不要超过 3 层调用
-
-### 重复好过错误的抽象
-
-```python
-✅ 好：重复但清晰
-def create_user(data):
-    return db.query('INSERT INTO users ...', [data['name'], data['email']])
-
-def create_post(data):
-    return db.query('INSERT INTO posts ...', [data['title'], data['content']])
-
-❌ 坏：过早抽象
-def create(table, data):  # 看起来灵活，实际脆弱
-    keys = ','.join(data.keys())
-    values = list(data.values())
-    return db.query(f'INSERT INTO {table} ({keys}) VALUES (?)', values)
-```
-
-### 变量命名要完整
-
-```python
-✅ user_email, post_title, total_price
-❌ e, t, p
-```
-
-### Python 惯用法（Pythonic）
-
-```python
-# 用列表推导式/生成器，不用循环
-✅ result = [x * 2 for x in items if x > 0]
-✅ total = sum(item.price for item in items)
-
-❌ result = []
-   for x in items:
-       if x > 0:
-           result.append(x * 2)
-
-# 用 f-string，不用旧式格式化
-✅ f"User {user_id} failed: {reason}"
-❌ "User %s failed: %s" % (user_id, reason)
-❌ "User {} failed: {}".format(user_id, reason)
-
-# 直接返回布尔值
-✅ return age >= 18
-✅ return name in valid_names
-
-❌ if age >= 18:
-       return True
-   else:
-       return False
-
-# 用 with 管理资源，不要手动 close
-✅ with open('file.txt') as f:
-       data = f.read()
-
-❌ f = open('file.txt')
-   data = f.read()
-   f.close()
-
-# 用字典的 get()，不要 try-except KeyError
-✅ value = data.get('key', default_value)
-✅ value = data.get('key')  # 返回 None 如果不存在
-
-❌ try:
-       value = data['key']
-   except KeyError:
-       value = default_value
-```
-
----
-
-## 3. 测试原则
-
-### 真实测试，禁止 mock
-
-```python
-✅ 好：调用真实 API
-def test_create_user():
-    user = api.create_user({'name': 'test', 'email': 'test@example.com'})
-    assert user['id'] is not None
-
-❌ 坏：mock 一切
-def test_create_user():
-    mock_db.query.return_value = {'id': 1}
-    user = create_user(...)
-    assert mock_db.query.called  # 测了个寂寞
-```
-
-### 测试要简单直接
-
-- 一个测试一个断言
-- 测试名称要描述场景
-- 遇错即停，不要 try-catch
-
----
-
-## 4. 工作流程
-
-### 简化版（3 步）
-
-1. **写测试** - 用真实依赖
-2. **写实现** - 最简单能跑的版本
-3. **检查错误信息** - 确保出错时能快速定位
-
-### 遇到问题：3 次规则
-
-- 尝试 3 次还不行 → 停下来
-- 记录尝试过的方案和错误
-- 换一个完全不同的思路
-- 或者直接问人
-
----
-
-## 5. 禁止清单
-
-### 永远不要
-
-- ❌ **创建 utils/helpers 文件夹** - 会变成垃圾场
-- ❌ **写 wrapper 函数** - 直接调用底层库
-- ❌ **提前抽象** - 至少重复 3 次再考虑
-- ❌ **捕获异常后不处理** - 要么处理，要么别捕获
-- ❌ **封装 logger** - print() 就够了
-- ❌ **超过 3 层的抽象** - 你在炫技
-
-### 提交前检查（3 项）
-
-- [ ] 能编译/运行
-- [ ] 有测试且通过
-- [ ] 错误信息清晰（手动触发一个错误看看）
-
----
-
-## 6. 决策原则（遇到多个方案时）
-
-问自己 3 个问题：
-
-1. **哪个最简单？** - 选最简单的
-2. **哪个代码最少？** - 选代码最少的
-3. **出错时哪个更容易调试？** - 选容易调试的
-
-如果还是不确定 → 选第一个想到的方案，不要过度思考
-
----
-
-## 7. 配置说明
-
-### 语言和输出
-
-- **思考过程**：用英文
-- **回复内容**：用中文
-
-### 回复风格
-
-- 最小可行实现，不加额外功能
-- 解释从简，跳过显而易见的内容
-
----
-
-## 记住
-
-**写代码不是为了炫技，是为了解决问题**
-
-- 代码越少，bug 越少
-- 抽象越少，调试越快
-- 功能能用就行，不要追求完美
-- 3 个月后的你会感谢现在写简单代码的你
+# CLAUDE.md（全局）
+
+## 范围
+本文件会被注入到每一次会话中：必须保持简短、通用。
+不要把它当作风格细则或任务说明的“垃圾桶”。
+
+## 通用原则
+- 选择最简单且正确的方案，尽量少代码、少依赖、少抽象。
+- 先用确定性证据，再下结论；不要用推测替代验证。
+- 避免过早抽象，优先遵循仓库既有模式与约定。
+- 小步快跑、可审查的改动；不确定就停下来提问。
+
+## 工具策略（Unix 哲学）
+- 优先使用“当前环境可用的命令行工具”做观察与验证（快、确定、成本低），包括：
+  - 系统命令、已安装的 CLI、项目内脚本/二进制（例如 bin/、scripts/、Make/Task/Just 等）。
+- 先只读摸底，再最小改动，再验证闭环。
+- 优先复用项目提供的统一入口（Make/Task/包管理脚本等），保持流程一致与可复现。
+- 仅当本地 CLI + 项目工具无法触达所需系统/数据，或无法稳定复现结果时，才引入 Skills/MCP。
+- 不要让大模型做 linter/formatter 的工作；使用确定性工具并修复其输出的问题。
+
+## 错误处理（Fast-Fail）
+- 不要吞异常。
+- 若必须捕获异常：补充可行动的上下文信息后再抛出。
+  上下文应包含：位置（文件/函数）、输入、明确原因（不要模糊表述）。
+
+## 测试与验证
+- 默认优先真实集成路径；禁止新增 mock/stub（详见 agent_docs/tests.md）。
+- 改动后运行最快的相关校验（测试/类型检查/lint/构建）。
+
+## 默认工作流
+1) 澄清意图与验收标准（简短）。
+2) 给出最小计划（小步）。
+3) 实现最小可用改动。
+4) 用工具验证；修复失败；保持 diff 紧凑。
+5) 总结改了什么、如何验证通过。
+
+## 沟通与输出
+- 用英文思考，用中文回复。
+- 如被阻塞：说明已尝试什么、关键错误片段、下一步建议。
+
+## 渐进披露
+如果仓库存在 agent_docs/，按需阅读相关文档。
