@@ -1,0 +1,15 @@
+# 环境特定配置（每台机器不同）
+settings.json
+
+# Claude Code 运行时生成
+debug/
+history.jsonl
+shell-snapshots/
+stats-cache.json
+statsig/
+telemetry/
+todos/
+file-history/
+
+# 临时备份
+*.bak
