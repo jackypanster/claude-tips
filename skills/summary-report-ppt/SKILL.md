@@ -1,0 +1,1 @@
+/Users/user/workspace/prompt-vault/skills/summary-report-ppt/SKILL.md
