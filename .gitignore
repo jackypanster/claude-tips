@@ -1,6 +1,7 @@
 # 环境特定配置（每台机器不同）
 settings.json
-settings.local.json          # 本地权限/env 覆盖，可能含密钥——绝不进 public 仓
+# 本地权限/env 覆盖，可能含密钥——绝不进 public 仓
+settings.local.json
 
 # Claude Code 运行时生成
 debug/
@@ -11,9 +12,10 @@ statsig/
 telemetry/
 todos/
 file-history/
-transcripts/                 # 对话记录——私有，绝不公开
-stats/                       # 使用统计——私有
-tasks/                       # 后台任务运行态——运行时噪声
+# 对话记录 / 使用统计 / 任务运行态——私有，绝不公开
+transcripts/
+stats/
+tasks/
 
 # 每项目本地状态（memory / 会话数据）——本地加载，不进 public claude-tips
 projects/
