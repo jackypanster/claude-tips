@@ -1,23 +1,8 @@
 {
-  "enabledPlugins": {
-    "document-skills@anthropic-agent-skills": true,
-    "example-skills@anthropic-agent-skills": true,
-    "file-organizer@awesome-claude-skills": true,
-    "plugin-dev@claude-code-plugins": true,
-    "content-research-writer@awesome-claude-skills": true,
-    "dev-browser@dev-browser-marketplace": true,
-    "skill-creator@awesome-claude-skills": true
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
   },
-  "alwaysThinkingEnabled": true,
   "permissions": {
-    "additionalDirectories": [
-      "~/workspace",
-      "~/Documents",
-      "~/Downloads",
-      "~/.config",
-      "~/.local/share",
-      "~/.cache"
-    ],
     "allow": [
       "Bash",
       "Read",
@@ -35,7 +20,6 @@
       "Read(**/*secret*)",
       "Read(**/*password*)",
       "Read(**/*credential*)",
-
       "Read(~/.ssh/**)",
       "Read(~/.gnupg/**)",
       "Read(~/.aws/**)",
@@ -44,7 +28,6 @@
       "Read(~/.kube/config)",
       "Read(~/.netrc)",
       "Read(~/.docker/config.json)",
-
       "Read(**/*.pem)",
       "Read(**/*.key)",
       "Read(**/*.p12)",
@@ -52,16 +35,95 @@
       "Read(**/*_rsa)",
       "Read(**/*_ed25519)",
       "Read(**/*_ecdsa)",
-
       "Read(**/id_rsa*)",
       "Read(**/id_ed25519*)",
       "Read(**/*.keystore)",
       "Read(**/*.jks)",
-
       "Write(~/.ssh/**)",
       "Write(~/.gnupg/**)",
       "Write(~/.aws/**)",
       "Edit(**/.env*)"
+    ],
+    "defaultMode": "auto",
+    "additionalDirectories": [
+      "~/workspace",
+      "~/Documents",
+      "~/Downloads",
+      "~/.config",
+      "~/.local/share",
+      "~/.cache"
     ]
-  }
+  },
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/user-prompt-skill-matcher.py",
+            "timeout": 2000
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Skill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/skill-usage-tracker.py",
+            "timeout": 2000
+          }
+        ]
+      }
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "bash -c '\"/opt/homebrew/bin/bun\" \"$(ls -td ~/.claude/plugins/cache/claude-hud/claude-hud/*/ 2>/dev/null | head -1)src/index.ts\"'"
+  },
+  "enabledPlugins": {
+    "dev-browser@dev-browser-marketplace": true,
+    "obsidian@obsidian-skills": true,
+    "claude-hud@claude-hud": true,
+    "example-skills@anthropic-agent-skills": false,
+    "file-organizer@awesome-claude-skills": false,
+    "plugin-dev@claude-code-plugins": false,
+    "content-research-writer@awesome-claude-skills": false,
+    "skill-creator@awesome-claude-skills": false,
+    "code-simplifier@claude-plugins-official": false,
+    "planning-with-files@planning-with-files": false,
+    "imagen@ai-skills": false,
+    "ralph-loop@claude-plugins-official": false,
+    "telegram@claude-plugins-official": true,
+    "autoresearch@autoresearch": true,
+    "vercel@claude-plugins-official": true,
+    "ppt-master@ppt-master": true,
+    "codex@openai-codex": true
+  },
+  "extraKnownMarketplaces": {
+    "autoresearch": {
+      "source": {
+        "source": "github",
+        "repo": "uditgoenka/autoresearch"
+      }
+    },
+    "ppt-master": {
+      "source": {
+        "source": "github",
+        "repo": "hugohe3/ppt-master"
+      }
+    },
+    "openai-codex": {
+      "source": {
+        "source": "github",
+        "repo": "openai/codex-plugin-cc"
+      }
+    }
+  },
+  "alwaysThinkingEnabled": true,
+  "effortLevel": "high",
+  "skipDangerousModePermissionPrompt": true,
+  "verbose": true
 }

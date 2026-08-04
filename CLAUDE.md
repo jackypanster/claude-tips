@@ -39,7 +39,19 @@
 
 ## 沟通与输出
 - 用英文思考，用中文回复。
+- 技术术语、代码标识符、命令保留英文原文，不强行翻译；生僻术语首次出现可加中文注解；有约定俗成中文译名的概念照常用中文。行文避免翻译腔，多用主动语态和短句。
 - 如被阻塞：说明已尝试什么、关键错误片段、下一步建议。
 
 ## 渐进披露
 如果仓库存在 agent_docs/，按需阅读相关文档。
+
+<!-- CODEGRAPH_START -->
+## CodeGraph
+
+In repositories indexed by CodeGraph (a `.codegraph/` directory exists at the repo root), reach for it BEFORE grep/find or reading files when you need to understand or locate code:
+
+- **MCP tools** (when available): `codegraph_explore` answers most code questions in one call — the relevant symbols' verbatim source plus the call paths between them. `codegraph_node` returns one symbol's source + callers, or reads a whole file with line numbers. If the tools are listed but deferred, load them by name via tool search.
+- **Shell** (always works): `codegraph explore "<symbol names or question>"` and `codegraph node <symbol-or-file>` print the same output.
+
+If there is no `.codegraph/` directory, skip CodeGraph entirely — indexing is the user's decision.
+<!-- CODEGRAPH_END -->
