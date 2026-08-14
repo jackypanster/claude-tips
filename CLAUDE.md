@@ -19,7 +19,11 @@
 - 不要让大模型做 linter/formatter 的工作；使用确定性工具并修复其输出的问题。
 
 ## 知识库
-~/workspace/notes 是跨机器同步的个人知识库（~376 篇，技术/金融）。涉及技术方案、配置、架构决策时，动手前快速 grep 或 `mcp__qmd__search` 检索相关笔记，避免重复造轮子。
+~/workspace/notes 是跨机器同步的个人知识库（技术/金融，近千篇量级）。涉及技术方案、配置、架构决策时，动手前快速 grep 或 `mcp__qmd__search` 检索相关笔记，避免重复造轮子。
+
+**接入新 agent 触发**：当用户提到接入/启用/对接新的 agent（Codex / Cursor / Aider / Hermes / baoyu-skills / 任何 IM bot / 一次性脚本）写入 `~/workspace/notes` 时，主动提醒用户喂这段开场白给新 agent——避免它把工件写错位置或污染 KB：
+
+> 你即将向 ~/workspace/notes 写入内容。写入前请先读 ~/workspace/notes/AGENTS.md（约 70 行），它会告诉你：KB 笔记 vs 工件区的边界、命名规则、frontmatter 契约、git sync 流程、3 条红线。完整协议在 docs/NOTE_SPEC.md，AGENTS.md 会指给你。
 
 ## 错误处理（Fast-Fail）
 - 不要吞异常。
@@ -55,3 +59,14 @@ In repositories indexed by CodeGraph (a `.codegraph/` directory exists at the re
 
 If there is no `.codegraph/` directory, skip CodeGraph entirely — indexing is the user's decision.
 <!-- CODEGRAPH_END -->
+
+## Skill 触发（失败模式）
+| 症状 | 先用 |
+|------|------|
+| 开始写代码前拿不准设计 | `/think` |
+| 出 bug / 行为异常 / 测试挂 | `/hunt` |
+| 实现完想验证正确性 | `/check` |
+| 要调研一个项目/工具/文章 | `/tech-investigator` |
+
+## Browser Harness
+@~/Developer/browser-harness/SKILL.md
