@@ -2,6 +2,11 @@
 settings.json
 # 本地权限/env 覆盖，可能含密钥——绝不进 public 仓
 settings.local.json
+# 凭据 / 通道密钥 / MCP 配置 / auto-mode 拒绝日志（含命令原文）——绝不进 public 仓
+.credentials.json
+channels/telegram/.env
+.mcp.json
+auto-mode-denials.jsonl
 
 # Claude Code 运行时生成
 debug/
