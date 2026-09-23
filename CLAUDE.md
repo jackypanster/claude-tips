@@ -13,7 +13,7 @@
 ## 主 agent 角色：编排优先
 - 主 agent 的核心职责是分析、编排、验证：需求澄清、方案拆解、任务分发、结果验收。
 - 实现类工作（读大量代码、写代码、跑测试、批量修改）尽可能用 Agent 工具派给 subagent（`model: "opus"`）执行。
-- 主 agent 是 Fable 系模型时为硬约束（不绑具体版本号，点升级不失效）：实现类工作一律派发，自己不直接执行。
+- 编排优先是默认偏好，不绑定模型族：实现类工作默认派发，是否派发由主 agent 按任务规模判断。
 - 例外：单点琐碎改动（一两个文件、几行 diff）直接做，派发开销大于收益。
 - 派发时写自包含简报：subagent 无会话上下文，必须含目标、约束、验收标准。注意 `subagent_type: "fork"` 忽略 model 参数，派发用 general-purpose。
 
@@ -74,6 +74,3 @@ If there is no `.codegraph/` directory, skip CodeGraph entirely — indexing is 
 | 出 bug / 行为异常 / 测试挂 | `/hunt` |
 | 实现完想验证正确性 | `/check` |
 | 要调研一个项目/工具/文章 | `/tech-investigator` |
-
-## Browser Harness
-@~/Developer/browser-harness/SKILL.md
